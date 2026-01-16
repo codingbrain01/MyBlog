@@ -136,6 +136,9 @@ const authSlice = createSlice({
       })
       .addCase(logout.fulfilled, s => {
         s.user = null
+        s.error = null
+        s.loading = false
+        s.hydrated = true 
       })
       .addCase(hydrateUser.pending, s => {
         s.loading = true
