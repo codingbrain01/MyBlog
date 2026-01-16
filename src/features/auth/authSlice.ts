@@ -67,7 +67,7 @@ export const login = createAsyncThunk(
       .from('profiles')
       .select('name')
       .eq('id', supaUser.id)
-      .single()
+      .maybeSingle()
 
     if (error) throw error
 
@@ -90,7 +90,7 @@ export const hydrateUser = createAsyncThunk<AuthUser | null>(
       .from('profiles')
       .select('name')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     return {
       id: user.id,
