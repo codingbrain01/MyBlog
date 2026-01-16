@@ -30,7 +30,6 @@ export default function Blogs() {
                     <Link to="/profile">{user?.name}</Link>
                     <Link to="/logout"><button>Logout</button></Link>
                 </div>
-
             </div>
             <Link to="/create"><button>Create Blog</button></Link>
 
