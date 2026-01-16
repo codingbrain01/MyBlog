@@ -79,13 +79,11 @@ export const login = createAsyncThunk(
   }
 )
 
-
-export const hydrateUser = createAsyncThunk(
+export const hydrateUser = createAsyncThunk<AuthUser | null>(
   'auth/hydrate',
   async () => {
     const { data } = await supabase.auth.getUser()
     const user = data.user
-
     if (!user) return null
 
     const { data: profile } = await supabase
@@ -96,8 +94,8 @@ export const hydrateUser = createAsyncThunk(
 
     return {
       id: user.id,
-      email: user.email,
-      name: profile?.name,
+      email: user.email ?? null,
+      name: profile?.name ?? null,
     }
   }
 )
@@ -128,10 +126,13 @@ const authSlice = createSlice({
         s.user = a.payload
         s.error = null
       })
-
+      .addCase(login.pending, s => {
+        s.loading = true
+        s.error = null
+      })
       .addCase(login.rejected, (s, a) => {
         s.loading = false
-        s.error = a.error.message || 'Invalid credentials'
+        s.error = (a.payload as string) || 'Invalid credentials'
       })
       .addCase(logout.fulfilled, s => {
         s.user = null
@@ -140,7 +141,7 @@ const authSlice = createSlice({
         s.loading = true
       })
       .addCase(hydrateUser.fulfilled, (s, a) => {
-        s.user = a.payload as AuthUser | null
+        s.user = a.payload
         s.loading = false
         s.hydrated = true
       })

@@ -1,6 +1,7 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useSelector } from 'react-redux'
-import type { RootState } from './app/store'
+import { useSelector, useDispatch } from 'react-redux'
+import type { RootState, AppDispatch } from './app/store'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -9,17 +10,28 @@ import Logout from './pages/Logout'
 import Blogs from './pages/Blogs'
 import CreateBlog from './pages/CreateBlog'
 import EditBlog from './pages/EditBlog'
-import Loader from './components/loader'
 import Blog from './pages/Blog'
+import Loader from './components/loader'
 import type { JSX } from 'react'
 
+import { hydrateUser } from './features/auth/authSlice'
+
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
-  const user = useSelector((state: RootState) => state.auth.user)
+  const { user, hydrated } = useSelector((state: RootState) => state.auth)
+
+  if (!hydrated) return <Loader />
+
   return user ? children : <Navigate to="/login" replace />
 }
 
 export default function App() {
+  const dispatch = useDispatch<AppDispatch>()
   const { hydrated } = useSelector((state: RootState) => state.auth)
+
+  // Hydrate the user on app start
+  useEffect(() => {
+    dispatch(hydrateUser())
+  }, [dispatch])
 
   if (!hydrated) return <Loader />
 
