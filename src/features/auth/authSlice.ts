@@ -74,7 +74,7 @@ export const login = createAsyncThunk(
     return {
       id: supaUser.id,
       email: supaUser.email ?? null,
-      name: profile?.name ?? null,
+      name: profile?.name ?? 'Unknown',
     }
   }
 )
@@ -95,7 +95,7 @@ export const hydrateUser = createAsyncThunk<AuthUser | null>(
     return {
       id: user.id,
       email: user.email ?? null,
-      name: profile?.name ?? null,
+      name: profile?.name ?? 'Unknown',
     }
   }
 )
