@@ -59,17 +59,20 @@ export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }: { email: string; password: string }) => {
     const supaUser = await loginUser(email, password)
-
     if (!supaUser) throw new Error('Login failed')
 
-    // Fetch profile from Supabase
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('name')
-      .eq('id', supaUser.id)
-      .maybeSingle()
-
-    if (error) throw error
+    // safe profile fetch
+    let profile = null
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', supaUser.id)
+        .maybeSingle()
+      profile = data
+    } catch (err) {
+      console.warn('Profile fetch error', err)
+    }
 
     return {
       id: supaUser.id,
@@ -86,11 +89,17 @@ export const hydrateUser = createAsyncThunk<AuthUser | null>(
     const user = data.user
     if (!user) return null
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name')
-      .eq('id', user.id)
-      .maybeSingle()
+    let profile = null
+    try {
+      const { data: p } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', user.id)
+        .maybeSingle()
+      profile = p
+    } catch (err) {
+      console.warn('Profile fetch error', err)
+    }
 
     return {
       id: user.id,
