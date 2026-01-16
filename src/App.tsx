@@ -28,7 +28,6 @@ export default function App() {
   const dispatch = useDispatch<AppDispatch>()
   const { hydrated } = useSelector((state: RootState) => state.auth)
 
-  // Hydrate the user on app start
   useEffect(() => {
     dispatch(hydrateUser())
   }, [dispatch])
