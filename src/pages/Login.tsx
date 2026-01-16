@@ -19,7 +19,7 @@ export default function Login() {
   }
 
   return (
-    <div>
+    <div className='auth-box'>
       <h2>Login</h2>
 
       <form onSubmit={handleSubmit}>
@@ -44,7 +44,7 @@ export default function Login() {
         </button>
       </form>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className='error'>{error}</p>}
 
       <p>
         No account? <Link to="/register">Register</Link>

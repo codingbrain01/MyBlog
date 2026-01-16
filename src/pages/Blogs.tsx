@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import type { RootState, AppDispatch } from '../app/store'
-import { loadBlogs, setPage, removeBlog } from '../features/blog/blogSlice'
+import { loadBlogs, setPage } from '../features/blog/blogSlice'
 
 export default function Blogs() {
     const dispatch = useDispatch<AppDispatch>()
@@ -23,11 +23,16 @@ export default function Blogs() {
 
 
     return (
-        <div>
-            <h2>Blogs</h2>
+        <div className='container'>
+            <div className="header">
+                <h2>Blogbook</h2>
+                <div>
+                    <Link to="/profile">{user?.name}</Link>
+                    <Link to="/logout"><button>Logout</button></Link>
+                </div>
 
-            <Link to="/create">Create Blog</Link> |{' '}
-            <Link to="/logout">Logout</Link>
+            </div>
+            <Link to="/create"><button>Create Blog</button></Link>
 
             {loading && <p>Loading...</p>}
 
@@ -37,30 +42,14 @@ export default function Blogs() {
 
             {!loading &&
                 items.map(blog => (
-                    <div key={blog.id} style={{ borderBottom: '1px solid #ccc', margin: '1rem 0' }}>
-                        <h3>{blog.title}</h3>
-                        <p>{blog.content.slice(0, 100)}...</p>
-
-                        {user?.id === blog.author_id && (
-                            <>
-                                <Link to={`/edit/${blog.id}`}>Edit</Link>{' '}
-                                <button
-                                    onClick={() => {
-                                        if (confirm('Delete this blog?')) {
-                                            dispatch(removeBlog(blog.id))
-                                        }
-                                    }}
-                                >
-                                    Delete
-                                </button>
-
-                            </>
-                        )}
+                    <div className='blog-card' key={blog.id}>
+                        <Link to={`/blog/${blog.id}`}><h3>{blog.title}</h3></Link> 
+                        <p className='content'>{blog.content.slice(0, 100)}</p>
                     </div>
                 ))}
 
             {/* Pagination */}
-            <div style={{ marginTop: '1rem' }}>
+            <div className='pagination'>
                 <button
                     disabled={page === 1}
                     onClick={() => dispatch(setPage(page - 1))}

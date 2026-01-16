@@ -1,0 +1,286 @@
+/* =========================
+   RESET & BASE
+========================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Arial, sans-serif;
+  background: #f4f6f8;
+  color: #222;
+  line-height: 1.6;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+.container {
+  max-width: 900px;
+  margin: 2rem auto;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.header a {
+  margin-left: 1rem;
+  text-decoration: none;
+  color: #0057d8;
+  font-weight: 500;
+}
+
+.header a:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   HEADINGS
+========================= */
+h1, h2, h3 {
+  color: #111;
+}
+
+h2 {
+  border-bottom: 2px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+/* =========================
+   FORMS
+========================= */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+input,
+textarea {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: #0057d8;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #0057d8;
+  color: #fff;
+  font-weight: 500;
+}
+
+.btn-edit, .btn-danger {
+  background-color: transparent;
+  font-weight: 600;
+}
+
+.btn-edit:hover, .btn-danger:hover {
+  text-decoration: underline;
+}
+
+button:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+/* Edit button */
+.btn-edit {
+  color: #0056d8cb;
+}
+
+.btn-edit:hover {
+  color:#0057d8
+}
+
+/* Delete buttton */
+.btn-danger {
+  color: #c03a2be1;
+}
+
+.btn-danger:hover {
+  color: #a93226;
+}
+
+/* =========================
+   AUTH PAGES
+========================= */
+.auth-box {
+  max-width: 420px;
+  margin: 4rem auto;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.auth-box h2 {
+  text-align: center;
+}
+
+.auth-box p {
+  text-align: center;
+}
+
+/* =========================
+   BLOG LIST
+========================= */
+.blog-card {
+  padding: 1rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.blog-card h3 {
+  margin-bottom: 0.3rem;
+}
+
+.blog-title {
+  text-decoration: none;
+}
+
+.blog-card .content {
+  color: #555;
+}
+
+.blog-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: end;
+}
+
+.blog-actions p {
+  cursor: pointer;
+  font-weight: 600;
+  transition: .1s ease-in-out;
+  margin: 0 0.3rem;
+  font-size: 1rem;
+}
+
+/* =========================
+   PAGINATION
+========================= */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+  gap: 1rem;
+}
+
+.pagination span {
+  font-weight: 500;
+}
+
+/* =========================
+   FEEDBACK
+========================= */
+.error {
+  color: #c0392b;
+  margin-top: 0.5rem;
+}
+
+.success {
+  color: #2e7d32;
+}
+
+.loading {
+  color: #555;
+  font-style: italic;
+}
+
+/* =========================
+   LINKS
+========================= */
+a {
+  color: #0057d8;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+  text-decoration-color: #111;
+
+}
+
+/* =========================
+   PROFILE
+========================= */
+.profile-page {
+  padding: 2rem;
+}
+
+.profile-info {
+  margin-bottom: 2rem;
+}
+
+.blog-list {
+  list-style: none;
+  padding: 0;
+}
+
+.blog-item {
+  border-bottom: 1px solid #ccc;
+  padding: 0.5rem 0;
+}
+
+.blog-item a {
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.pagination {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================
+   MOBILE
+========================= */
+@media (max-width: 600px) {
+  .container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

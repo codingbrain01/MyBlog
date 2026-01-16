@@ -1,3 +1,4 @@
+import { supabase } from '../../lib/supabaseClient'
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import {
     fetchBlogs,
@@ -8,14 +9,17 @@ import {
 
 export interface Blog {
     id: string
+    name: string
     title: string
     content: string
     author_id: string
     created_at: string
+    author_name?: string
 }
 
 interface BlogState {
     items: Blog[]
+    selectedBlog: Blog | null
     total: number
     page: number
     pageSize: number
@@ -25,9 +29,10 @@ interface BlogState {
 
 const initialState: BlogState = {
     items: [],
+    selectedBlog: null,
     total: 0,
     page: 1,
-    pageSize: 5,
+    pageSize: 20,
     loading: false,
     error: null,
 }
@@ -36,6 +41,21 @@ export const loadBlogs = createAsyncThunk(
     'blog/load',
     async ({ page, pageSize }: { page: number; pageSize: number }) =>
         fetchBlogs(page, pageSize)
+)
+
+export const loadBlogById = createAsyncThunk(
+  'blog/loadById',
+  async (id: string, { rejectWithValue }) => {
+    const { data, error } = await supabase
+      .from('blogs')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) return rejectWithValue(error.message)
+
+    return data
+  }
 )
 
 export const addBlog = createAsyncThunk(
@@ -81,8 +101,21 @@ const blogSlice = createSlice({
                 s.loading = false
                 s.error = a.error.message || 'Failed to load blogs'
             })
-            .addCase(removeBlog.fulfilled, s => {
-                s.items = s.items.filter(b => b.id !== s.items[0]?.id)
+            .addCase(loadBlogById.pending, s => { s.loading = true })
+            .addCase(loadBlogById.fulfilled, (s, a) => {
+                s.selectedBlog = a.payload
+                s.loading = false
+            })
+            .addCase(loadBlogById.rejected, (s, a) => {
+                s.error = a.payload as string
+                s.loading = false
+            })
+            .addCase(removeBlog.fulfilled, (s, action) => {
+                const idToRemove = action.meta.arg
+                s.items = s.items.filter(b => b.id !== idToRemove)
+                if (s.selectedBlog?.id === idToRemove) {
+                    s.selectedBlog = null
+                }
             })
             .addCase(addBlog.rejected, (s, a) => {
                 s.error = a.error.message || 'Failed to create blog'

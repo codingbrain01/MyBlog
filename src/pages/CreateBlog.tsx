@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { addBlog } from '../features/blog/blogSlice'
 import type { AppDispatch, RootState } from '../app/store'
 
@@ -20,10 +20,9 @@ export default function CreateBlog() {
   }
 
   return (
-    <div>
-      <h2>Create Blog</h2>
-
+    <div className='container'>
       <form onSubmit={handleSubmit}>
+        <h2 className="user">{user?.name}</h2>
         <input
           placeholder="Title"
           required
@@ -38,8 +37,10 @@ export default function CreateBlog() {
           onChange={e => setContent(e.target.value)}
         />
 
-        <button type="submit">Save</button>
+        <button type="submit">Post</button>
       </form>
+
+      <Link to="/">Back to Blogs</Link>
     </div>
   )
 }

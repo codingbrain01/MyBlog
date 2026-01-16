@@ -4,10 +4,13 @@ import type { RootState } from './app/store'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Profile from './pages/Profile'
 import Logout from './pages/Logout'
 import Blogs from './pages/Blogs'
 import CreateBlog from './pages/CreateBlog'
 import EditBlog from './pages/EditBlog'
+import Loader from './components/loader'
+import Blog from './pages/Blog'
 import type { JSX } from 'react'
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -16,6 +19,10 @@ const PrivateRoute = ({ children }: { children: JSX.Element }) => {
 }
 
 export default function App() {
+  const { hydrated } = useSelector((state: RootState) => state.auth)
+
+  if (!hydrated) return <Loader />
+
   return (
     <BrowserRouter>
       <Routes>
@@ -27,6 +34,15 @@ export default function App() {
           element={
             <PrivateRoute>
               <Blogs />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <Profile />
             </PrivateRoute>
           }
         />
@@ -45,6 +61,15 @@ export default function App() {
           element={
             <PrivateRoute>
               <EditBlog />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/blog/:id"
+          element={
+            <PrivateRoute>
+              <Blog />
             </PrivateRoute>
           }
         />

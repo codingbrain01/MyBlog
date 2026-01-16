@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import type { RootState, AppDispatch } from '../app/store'
 import { editBlog } from '../features/blog/blogSlice'
 
@@ -38,7 +38,7 @@ export default function EditBlog() {
 
 
     return (
-        <div>
+        <div className='container'>
             <h2>Edit Blog</h2>
 
             <form onSubmit={handleSubmit}>
@@ -56,6 +56,8 @@ export default function EditBlog() {
 
                 <button type="submit">Update</button>
             </form>
+
+            <Link to="/">Back to Blogs</Link>
         </div>
     )
 }

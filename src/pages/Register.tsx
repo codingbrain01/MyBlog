@@ -10,19 +10,27 @@ export default function Register() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
 
   if (user) return <Navigate to="/" replace />
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    dispatch(register({ email, password }))
+    dispatch(register({ email, password, name }))
   }
 
   return (
-    <div>
+    <div className='auth-box'>
       <h2>Register</h2>
 
       <form onSubmit={handleSubmit}>
+        <input type="name"
+        placeholder='Username'
+        required
+        value={name}
+        onChange={e => setName(e.target.value)}
+        />
+
         <input
           type="email"
           placeholder="Email"
@@ -44,7 +52,7 @@ export default function Register() {
         </button>
       </form>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className='error'>{error}</p>}
 
       <p>
         Already have an account? <Link to="/login">Login</Link>
