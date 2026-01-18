@@ -8,6 +8,7 @@ export interface Comment {
   parent_id?: string | null
   created_at: string
   author_name?: string | null
+  images?: string[]
 }
 
 // Fetch comments for a blog (including replies)
@@ -27,12 +28,18 @@ export const fetchComments = async (blogId: string) => {
 }
 
 // Create a new comment or reply
-export const createComment = async (blogId: string, authorId: string, content: string, parentId?: string) => {
+export const createComment = async (blogId: string,
+  authorId: string,
+  content: string,
+  parentId?: string,
+  images?: string[]
+) => {
   const { error } = await supabase.from('comments').insert({
     blog_id: blogId,
     author_id: authorId,
     content,
-    parent_id: parentId || null
+    parent_id: parentId || null,
+    images: images || null
   })
 
   if (error) throw error

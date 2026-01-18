@@ -287,7 +287,6 @@ a:hover {
   padding-right: 0.25rem;
 }
 
-/* Optional: subtle scrollbar styling */
 .image-previews::-webkit-scrollbar {
   width: 6px;
 }
@@ -460,10 +459,7 @@ a:hover {
 }
 
 .comment-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 
 .comment-actions {
@@ -500,6 +496,37 @@ a:hover {
   gap: 0.5rem;
   justify-content: flex-end;
 }
+
+.comment-images {
+ display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap; /* wrap if multiple images */
+  margin-top: 0.5rem; /* spacing under text */
+}
+
+.comment-images::-webkit-scrollbar {
+  height: 6px;
+}
+.comment-images::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.3);
+  border-radius: 3px;
+}
+
+.comment-img,
+.comment-preview-img {
+  max-height: 100px;
+  border-radius: 4px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.comment-img:hover,
+.comment-preview-img:hover {
+  transform: scale(1.05);
+}
+
+
 
 /* =========================
    RESPONSIVE COMMENTS

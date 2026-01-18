@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import type { AppDispatch, RootState } from '../../app/store'
+import { uploadBlogImages } from '../blog/blogService'
 import { loadComments, addComment, removeComment } from './commentSlice'
+
+interface CommentPayload {
+    blogId: string
+    authorId: string
+    content: string
+    parentId?: string
+    images?: string[]
+}
 
 interface CommentsProps {
     blogId: string
@@ -12,26 +21,79 @@ export default function Comments({ blogId }: CommentsProps) {
     const { items: comments, loading } = useSelector((s: RootState) => s.comments)
     const { user } = useSelector((s: RootState) => s.auth)
 
+    // Main comment state
     const [newComment, setNewComment] = useState('')
+    const [commentImages, setCommentImages] = useState<File[]>([])
+    const [commentPreviews, setCommentPreviews] = useState<string[]>([])
+    const [activeImage, setActiveImage] = useState<string | null>(null)
+
+    // Reply state
     const [replyTo, setReplyTo] = useState<string | null>(null)
     const [replyContent, setReplyContent] = useState('')
+    const [replyImages, setReplyImages] = useState<File[]>([])
+    const [replyPreviews, setReplyPreviews] = useState<string[]>([])
 
-    // Load comments for this blog
+    // Generate previews for main comment
+    useEffect(() => {
+        const urls = commentImages.map(file => URL.createObjectURL(file))
+        setCommentPreviews(urls)
+        return () => urls.forEach(url => URL.revokeObjectURL(url))
+    }, [commentImages])
+
+    // Generate previews for replies
+    useEffect(() => {
+        const urls = replyImages.map(file => URL.createObjectURL(file))
+        setReplyPreviews(urls)
+        return () => urls.forEach(url => URL.revokeObjectURL(url))
+    }, [replyImages])
+
+    // Load comments
     useEffect(() => {
         dispatch(loadComments(blogId))
     }, [blogId, dispatch])
 
+    // Post a new comment
     const handlePostComment = async () => {
         if (!user || !newComment.trim()) return
-        await dispatch(addComment({ blogId, authorId: user.id, content: newComment }))
+
+        let imageUrls: string[] | undefined
+        if (commentImages.length > 0) {
+            imageUrls = await uploadBlogImages(commentImages, user.id)
+        }
+
+        const payload: CommentPayload = {
+            blogId,
+            authorId: user.id,
+            content: newComment,
+            images: imageUrls
+        }
+
+        await dispatch(addComment(payload))
         setNewComment('')
+        setCommentImages([])
         dispatch(loadComments(blogId))
     }
 
+    // Post a reply
     const handlePostReply = async (parentId: string) => {
         if (!user || !replyContent.trim()) return
-        await dispatch(addComment({ blogId, authorId: user.id, content: replyContent, parentId }))
+
+        let imageUrls: string[] | undefined
+        if (replyImages.length > 0) {
+            imageUrls = await uploadBlogImages(replyImages, user.id)
+        }
+
+        const payload: CommentPayload = {
+            blogId,
+            authorId: user.id,
+            content: replyContent,
+            parentId,
+            images: imageUrls
+        }
+
+        await dispatch(addComment(payload))
         setReplyContent('')
+        setReplyImages([])
         setReplyTo(null)
         dispatch(loadComments(blogId))
     }
@@ -42,15 +104,14 @@ export default function Comments({ blogId }: CommentsProps) {
         dispatch(loadComments(blogId))
     }
 
-
-
-    // Filter top-level comments
+    // Top-level comments
     const topLevelComments = comments.filter(c => !c.parent_id)
 
     return (
         <div className="comments-section">
             <h3 className="comments-title">Comments</h3>
 
+            {/* ===== NEW COMMENT ===== */}
             {user && (
                 <div className="new-comment">
                     <textarea
@@ -58,8 +119,35 @@ export default function Comments({ blogId }: CommentsProps) {
                         value={newComment}
                         onChange={e => setNewComment(e.target.value)}
                         className="comment-input"
+                        required
                     />
-                    <button onClick={handlePostComment} className="comment-btn">Post Comment</button>
+
+                    <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={e => {
+                            if (!e.target.files) return
+                            setCommentImages(Array.from(e.target.files))
+                        }}
+                    />
+
+                    {commentPreviews.length > 0 && (
+                        <div className="image-previews">
+                            {commentPreviews.map((src, i) => (
+                                <img
+                                    key={i}
+                                    src={src}
+                                    alt={`Preview ${i}`}
+                                    className="comment-preview-img"
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    <button onClick={handlePostComment} className="comment-btn">
+                        Post Comment
+                    </button>
                 </div>
             )}
 
@@ -76,16 +164,59 @@ export default function Comments({ blogId }: CommentsProps) {
                         return (
                             <li key={comment.id} className="comment-item">
                                 <div className="comment-content">
+                                    {/* Comment text */}
                                     <p>
                                         <strong>{comment.author_name}</strong>: {comment.content}
                                     </p>
+
+                                    {/* ===== Comment Images ===== */}
+                                    {comment.images && comment.images.length > 0 && (
+                                        <div className="comment-images">
+                                            {comment.images.map((src, i) => (
+                                                <img
+                                                    key={i}
+                                                    src={src}
+                                                    alt={`Comment image ${i + 1}`}
+                                                    className="comment-img"
+                                                    onClick={() => setActiveImage(src)} // open modal on click
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* ===== Reply/Delete Actions ===== */}
                                     <div className="comment-actions">
-                                        {user && <button className="reply-btn" onClick={() => setReplyTo(comment.id)}>Reply</button>}
-                                        {isOwner && <button className="delete-btn" onClick={() => handleDeleteComment(comment.id)}>Delete</button>}
+                                        {user && (
+                                            <button
+                                                className="reply-btn"
+                                                onClick={() => setReplyTo(comment.id)}
+                                            >
+                                                Reply
+                                            </button>
+                                        )}
+                                        {isOwner && (
+                                            <button
+                                                className="delete-btn"
+                                                onClick={() => handleDeleteComment(comment.id)}
+                                            >
+                                                Delete
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 
-                                {/* Reply input */}
+                                {/* ===== Image Modal ===== */}
+                                {activeImage && (
+                                    <div
+                                        className="image-modal"
+                                        onClick={() => setActiveImage(null)}
+                                    >
+                                        <img src={activeImage} alt="Full view" />
+                                    </div>
+                                )}
+
+
+                                {/* ===== REPLY BOX ===== */}
                                 {replyTo === comment.id && (
                                     <div className="reply-box">
                                         <textarea
@@ -94,14 +225,48 @@ export default function Comments({ blogId }: CommentsProps) {
                                             onChange={e => setReplyContent(e.target.value)}
                                             className="reply-input"
                                         />
+
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            onChange={e => {
+                                                if (!e.target.files) return
+                                                setReplyImages(Array.from(e.target.files))
+                                            }}
+                                        />
+
+                                        {replyPreviews.length > 0 && (
+                                            <div className="image-previews">
+                                                {replyPreviews.map((src, i) => (
+                                                    <img
+                                                        key={i}
+                                                        src={src}
+                                                        alt={`Reply preview ${i}`}
+                                                        className="comment-preview-img"
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
+
                                         <div className="reply-actions">
-                                            <button onClick={() => handlePostReply(comment.id)} className="reply-send-btn">Send</button>
-                                            <button onClick={() => setReplyTo(null)} className="reply-cancel-btn">Cancel</button>
+                                            <button
+                                                onClick={() => handlePostReply(comment.id)}
+                                                className="reply-send-btn"
+                                            >
+                                                Send
+                                            </button>
+                                            <button
+                                                onClick={() => setReplyTo(null)}
+                                                className="reply-cancel-btn"
+                                            >
+                                                Cancel
+                                            </button>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Replies */}
+                                {/* ===== REPLIES ===== */}
                                 {replies.length > 0 && (
                                     <ul className="replies">
                                         {replies.map(reply => {
@@ -111,8 +276,30 @@ export default function Comments({ blogId }: CommentsProps) {
                                                     <p>
                                                         <strong>{reply.author_name}</strong>: {reply.content}
                                                     </p>
+
+                                                    {/* Reply images */}
+                                                    {reply.images && reply.images.length > 0 && (
+                                                        <div className="comment-images">
+                                                            {reply.images.map((src, i) => (
+                                                                <img
+                                                                    key={i}
+                                                                    src={src}
+                                                                    alt={`Reply image ${i + 1}`}
+                                                                    className="comment-img"
+                                                                    onClick={() => setActiveImage(src)} // <-- click to open modal
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+
                                                     {isReplyOwner && (
-                                                        <button className="delete-btn" onClick={() => handleDeleteComment(reply.id)}>Delete</button>
+                                                        <button
+                                                            className="delete-btn"
+                                                            onClick={() => handleDeleteComment(reply.id)}
+                                                        >
+                                                            Delete
+                                                        </button>
                                                     )}
                                                 </li>
                                             )
@@ -120,6 +307,7 @@ export default function Comments({ blogId }: CommentsProps) {
                                     </ul>
                                 )}
                             </li>
+
                         )
                     })}
                 </ul>

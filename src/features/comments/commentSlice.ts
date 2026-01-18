@@ -29,9 +29,13 @@ export const loadComments = createAsyncThunk(
 // Add a comment or reply
 export const addComment = createAsyncThunk(
     'comments/add',
-    async ({ blogId, authorId, content, parentId }: { blogId: string, authorId: string, content: string, parentId?: string }, { rejectWithValue }) => {
+    async (
+        { blogId, authorId, content, parentId, images }:
+            { blogId: string, authorId: string, content: string, parentId?: string, images?: string[] },
+            { rejectWithValue }
+        ) => {
         try {
-            await createComment(blogId, authorId, content, parentId)
+            await createComment(blogId, authorId, content, parentId, images)
         } catch (err: any) {
             return rejectWithValue(err.message)
         }
@@ -75,10 +79,10 @@ const commentSlice = createSlice({
             })
 
             .addCase(removeComment.fulfilled, (state, action) => {
-  if (action.payload) {
-    state.items = state.items.filter(c => c.id !== action.payload)
-  }
-})
+                if (action.payload) {
+                    state.items = state.items.filter(c => c.id !== action.payload)
+                }
+            })
 
             .addCase(removeComment.rejected, (state, action) => {
                 state.error = action.payload as string
