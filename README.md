@@ -36,7 +36,9 @@ Security:
 
 ---
 
-## Project Setup
+## Official update v2.1
 
-### 1. Clone the repository
-
+Added Features
+- Display user name on blog view
+- Image upload - blog
+- Preview image upload

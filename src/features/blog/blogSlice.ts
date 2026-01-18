@@ -2,7 +2,6 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import {
     fetchBlogs,
     fetchBlogById,
-    fetchBlogsByAuthor,
     createBlog,
     updateBlog,
     deleteBlog,
@@ -15,6 +14,7 @@ export interface Blog {
     author_id: string
     created_at: string
     authorName: string | null
+    images?: string[]
 }
 
 interface BlogState {
@@ -44,33 +44,21 @@ export const loadBlogs = createAsyncThunk(
 )
 
 export const loadBlogById = createAsyncThunk(
-  'blog/loadById',
-  async (id: string, { rejectWithValue }) => {
-    try {
-      return await fetchBlogById(id)
-    } catch (err: any) {
-      return rejectWithValue(err.message)
+    'blog/loadById',
+    async (id: string, { rejectWithValue }) => {
+        try {
+            return await fetchBlogById(id)
+        } catch (err: any) {
+            return rejectWithValue(err.message)
+        }
     }
-  }
 )
-
-export const loadBlogsByAuthor = createAsyncThunk(
-  'blog/loadByAuthor',
-  async (authorId: string, { rejectWithValue }) => {
-    try {
-      return await fetchBlogsByAuthor(authorId)
-    } catch (err: any) {
-      return rejectWithValue(err.message)
-    }
-  }
-)
-
 export const addBlog = createAsyncThunk(
     'blog/add',
     async (
-        { title, content, userId }: { title: string; content: string; userId: string }
+        { title, content, userId, images }: { title: string; content: string; userId: string, images?: string[] }
     ) => {
-        await createBlog(title, content, userId)
+        await createBlog(title, content, userId, images)
     }
 )
 

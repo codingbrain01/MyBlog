@@ -50,6 +50,20 @@ export default function Blog() {
         </p>
       )}
 
+      {blog.images && blog.images.length > 0 && (
+        <div className="blog-images">
+          {blog.images.map((src, i) => (
+            <img
+              key={i}
+              src={src}
+              alt={`Blog image ${i}`}
+              style={{ maxWidth: '100%', marginBottom: '1rem' }}
+              onError={() => console.log('Image failed to load:', src)}
+            />
+          ))}
+        </div>
+      )}
+
       {isOwner && (
         <div className="blog-actions">
           <Link to={`/edit/${blog.id}`}>

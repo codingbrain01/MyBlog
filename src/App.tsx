@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import type { RootState, AppDispatch } from './app/store'
-
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Profile from './pages/Profile'
@@ -13,7 +12,6 @@ import EditBlog from './pages/EditBlog'
 import Blog from './pages/Blog'
 import Loader from './components/loader'
 import type { JSX } from 'react'
-
 import { hydrateUser } from './features/auth/authSlice'
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -21,7 +19,7 @@ const PrivateRoute = ({ children }: { children: JSX.Element }) => {
 
   if (!hydrated) return <Loader />
 
-  return user ? children : <Navigate to="/login" replace />
+  return user ? children : <Navigate to="/register" replace />
 }
 
 export default function App() {
@@ -85,14 +83,7 @@ export default function App() {
           }
         />
 
-        <Route
-          path="/logout"
-          element={
-            <PrivateRoute>
-              <Logout />
-            </PrivateRoute>
-          }
-        />
+        <Route path="/logout" element={<Logout />} />
       </Routes>
     </BrowserRouter>
   )

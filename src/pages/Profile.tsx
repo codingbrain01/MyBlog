@@ -11,7 +11,7 @@ interface Blog {
   created_at: string
 }
 
-const PAGE_SIZE = 5
+const PAGE_SIZE = 10
 
 export default function Profile() {
   const { user } = useSelector((s: RootState) => s.auth)
@@ -50,7 +50,10 @@ export default function Profile() {
 
   return (
     <div className="container profile-page">
-      <h2>My Profile</h2>
+      <div className="header">
+        <h2>My Profile</h2>
+        <Link to="/logout"><button>Logout</button></Link>
+      </div>
       <div className="profile-info">
         <p><strong>Name:</strong> {user.name}</p>
         <p><strong>Email:</strong> {user.email}</p>
@@ -65,7 +68,7 @@ export default function Profile() {
       <ul className="blog-list">
         {blogs.map(blog => (
           <li key={blog.id} className="blog-item">
-            <Link to={`/blog/${blog.id}`}>{blog.title}</Link> 
+            <Link to={`/blog/${blog.id}`}>{blog.title}</Link>
             <p>{blog.content.slice(0, 100)}</p>
           </li>
         ))}
