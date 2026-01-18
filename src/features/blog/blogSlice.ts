@@ -1,7 +1,8 @@
-import { supabase } from '../../lib/supabaseClient'
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import {
     fetchBlogs,
+    fetchBlogById,
+    fetchBlogsByAuthor,
     createBlog,
     updateBlog,
     deleteBlog,
@@ -9,12 +10,11 @@ import {
 
 export interface Blog {
     id: string
-    name: string
     title: string
     content: string
     author_id: string
     created_at: string
-    author_name?: string
+    authorName: string | null
 }
 
 interface BlogState {
@@ -32,7 +32,7 @@ const initialState: BlogState = {
     selectedBlog: null,
     total: 0,
     page: 1,
-    pageSize: 20,
+    pageSize: 10,
     loading: false,
     error: null,
 }
@@ -46,15 +46,22 @@ export const loadBlogs = createAsyncThunk(
 export const loadBlogById = createAsyncThunk(
   'blog/loadById',
   async (id: string, { rejectWithValue }) => {
-    const { data, error } = await supabase
-      .from('blogs')
-      .select('*')
-      .eq('id', id)
-      .single()
+    try {
+      return await fetchBlogById(id)
+    } catch (err: any) {
+      return rejectWithValue(err.message)
+    }
+  }
+)
 
-    if (error) return rejectWithValue(error.message)
-
-    return data
+export const loadBlogsByAuthor = createAsyncThunk(
+  'blog/loadByAuthor',
+  async (authorId: string, { rejectWithValue }) => {
+    try {
+      return await fetchBlogsByAuthor(authorId)
+    } catch (err: any) {
+      return rejectWithValue(err.message)
+    }
   }
 )
 

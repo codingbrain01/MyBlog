@@ -11,31 +11,51 @@ export default function Blog() {
   const navigate = useNavigate()
 
   const { selectedBlog: blog, loading, error } = useSelector(
-    (s: RootState) => s.blog
+    (state: RootState) => state.blog
   )
-  const { user, hydrated } = useSelector((s: RootState) => s.auth)
+
+  const { user, hydrated } = useSelector(
+    (state: RootState) => state.auth
+  )
 
   useEffect(() => {
     if (id) {
       dispatch(loadBlogById(id))
     }
   }, [id, dispatch])
-  
-  if (!hydrated || loading) return <Loader />
 
-  if (error) return <p style={{ color: 'red' }}>{error}</p>
-  if (!blog) return <p>Blog not found</p>
+  if (!hydrated || loading) {
+    return <Loader />
+  }
+
+  if (error) {
+    return <p style={{ color: 'red' }}>{error}</p>
+  }
+
+  if (!blog) {
+    return <p>Blog not found</p>
+  }
+
+  const isOwner = user?.id === blog.author_id
 
   return (
     <div className="container">
       <h1>{blog.title}</h1>
+
       <p>{blog.content}</p>
 
-      {user && user.id === blog.author_id && (
+      {blog.authorName && (
+        <p className="blog-author">
+          by: {blog.authorName}
+        </p>
+      )}
+
+      {isOwner && (
         <div className="blog-actions">
           <Link to={`/edit/${blog.id}`}>
             <p className="btn-edit">Edit</p>
           </Link>
+
           <p
             className="btn-danger"
             onClick={() => {

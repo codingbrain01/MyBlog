@@ -30,6 +30,21 @@ export const fetchBlogById = async (id: string) => {
     .single()
 
   if (error) throw error
+
+  return {
+    ...data,
+    authorName: data.profiles?.name ?? null,
+  }
+}
+
+export const fetchBlogsByAuthor = async (authorId: string) => {
+  const { data, error } = await supabase
+    .from('blogs')
+    .select('id, title, created_at')
+    .eq('author_id', authorId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
   return data
 }
 

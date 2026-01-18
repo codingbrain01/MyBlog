@@ -20,7 +20,7 @@ export default function Profile() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
 
-  if (!user) return null  // PrivateRoute should handle auth
+  if (!user) return null
 
   const fetchBlogs = async () => {
     setLoading(true)

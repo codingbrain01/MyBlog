@@ -22,7 +22,8 @@ export default function CreateBlog() {
   return (
     <div className='container'>
       <form onSubmit={handleSubmit}>
-        <h2 className="user">{user?.name}</h2>
+        <h2>Create Blog</h2>
+        
         <input
           placeholder="Title"
           required
