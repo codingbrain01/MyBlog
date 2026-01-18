@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import type { AppDispatch, RootState } from '../../app/store'
 import { loadComments, addComment, removeComment } from './commentSlice'
-import type { Comment } from './commentService'
 
 interface CommentsProps {
     blogId: string
@@ -39,9 +38,10 @@ export default function Comments({ blogId }: CommentsProps) {
 
     const handleDeleteComment = async (id: string) => {
         if (!confirm('Delete this comment?')) return
-        const deletedId = await dispatch(removeComment(id)).unwrap()
+        await dispatch(removeComment(id)).unwrap()
         dispatch(loadComments(blogId))
     }
+
 
 
     // Filter top-level comments
