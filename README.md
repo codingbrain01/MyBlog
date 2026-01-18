@@ -42,3 +42,10 @@ Added Features
 - Display user name on blog view
 - Image upload - blog
 - Preview image upload
+
+## Official update v2.2
+
+Added / Adjusted Features
+- Display user name on blog view at the bottom of the content
+- Image upload responsive view | original size if single image upload / respinsive clickable image to view in full
+- Preview image upload adjusted overlapping issues

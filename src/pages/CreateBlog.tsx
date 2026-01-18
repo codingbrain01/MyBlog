@@ -81,7 +81,6 @@ export default function CreateBlog() {
           </div>
         )}
 
-
         <button type="submit">Post</button>
       </form>
 
