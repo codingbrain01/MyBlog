@@ -62,7 +62,7 @@ Adjusted Features
 ## Official update v2.4
 
 Added Features
-- 
+- Uploaded blog images can be replaced
 
 Adjusted Features
 - User can edit blog contents and uploaded image/s
