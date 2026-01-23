@@ -58,3 +58,11 @@ Added Features
 Adjusted Features
 - Image upload responsive view | original size if single image upload / respinsive clickable image to view in full
 - Preview image upload adjusted overlapping issues
+
+## Official update v2.4
+
+Added Features
+- 
+
+Adjusted Features
+- User can edit blog contents and uploaded image/s

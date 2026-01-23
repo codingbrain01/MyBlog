@@ -62,11 +62,23 @@ export const createBlog = async (title: string, content: string, userId: string,
   if (error) throw error
 }
 
-export const updateBlog = async (id: string, title: string, content: string) => {
+export const updateBlog = async (id: string, title: string, content: string, images?: string[]) => {
+
+  const payload: any = {
+    title,
+    content,
+    updated_at: new Date(),
+  }
+
+  if (images) {
+    payload.images = images
+  }
+
   const { error } = await supabase
     .from('blogs')
-    .update({ title, content, updated_at: new Date() })
+    .update({ title, content, images, updated_at: new Date() })
     .eq('id', id)
+
   if (error) throw error
 }
 
@@ -96,7 +108,6 @@ export const uploadBlogImages = async (files: File[], userId: string) => {
 
   return uploadedUrls
 }
-
 
 export const deleteBlog = async (id: string) => {
   const { error } = await supabase.from('blogs').delete().eq('id', id)

@@ -64,8 +64,10 @@ export const addBlog = createAsyncThunk(
 
 export const editBlog = createAsyncThunk(
     'blog/edit',
-    async ({ id, title, content }: { id: string; title: string; content: string }) => {
-        await updateBlog(id, title, content)
+    async ({ id, title, content, images }: { id: string; title: string; content: string; images?: string[] }
+
+    ) => {
+        await updateBlog(id, title, content, images)
     }
 )
 
@@ -118,6 +120,7 @@ const blogSlice = createSlice({
             .addCase(editBlog.rejected, (s, a) => {
                 s.error = a.error.message || 'Failed to update blog'
             })
+
             .addCase(removeBlog.rejected, (s, a) => {
                 s.error = a.error.message || 'Failed to delete blog'
             })
