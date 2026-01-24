@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import type { AppDispatch, RootState } from '../../app/store'
 import { uploadBlogImages } from '../blog/blogService'
-import { loadComments, addComment, removeComment } from './commentSlice'
+import { loadComments, addComment, editComment, removeComment } from './commentSlice'
+
 
 interface CommentPayload {
     blogId: string
@@ -32,6 +33,10 @@ export default function Comments({ blogId }: CommentsProps) {
     const [replyContent, setReplyContent] = useState('')
     const [replyImages, setReplyImages] = useState<File[]>([])
     const [replyPreviews, setReplyPreviews] = useState<string[]>([])
+
+    // Edit state
+    const [editingId, setEditingId] = useState<string | null>(null)
+    const [editContent, setEditContent] = useState('')
 
     // Generate previews for main comment
     useEffect(() => {
@@ -98,6 +103,16 @@ export default function Comments({ blogId }: CommentsProps) {
         dispatch(loadComments(blogId))
     }
 
+    // Edit
+    const handleEditSave = async (id: string) => {
+        if (!editContent.trim()) return
+
+        await dispatch(editComment({ id, content: editContent }))
+        setEditingId(null)
+        setEditContent('')
+    }
+
+    // Delete
     const handleDeleteComment = async (id: string) => {
         if (!confirm('Delete this comment?')) return
         await dispatch(removeComment(id)).unwrap()
@@ -164,10 +179,25 @@ export default function Comments({ blogId }: CommentsProps) {
                         return (
                             <li key={comment.id} className="comment-item">
                                 <div className="comment-content">
-                                    {/* Comment text */}
-                                    <p>
-                                        <strong>{comment.author_name}</strong>: {comment.content}
-                                    </p>
+                                    {/* Top-level */}
+                                    {editingId === comment.id ? (
+                                        <>
+                                            <textarea
+                                                value={editContent}
+                                                onChange={e => setEditContent(e.target.value)}
+                                                className="comment-input"
+                                            />
+                                            <div className="comment-actions">
+                                            <button className="reply-btn" onClick={() => handleEditSave(comment.id)}>Save</button>
+                                            <button className="delete-btn" onClick={() => setEditingId(null)}>Cancel</button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <p>
+                                            <strong>{comment.author_name}</strong>: {comment.content}
+                                        </p>
+                                    )}
+
 
                                     {/* ===== Comment Images ===== */}
                                     {comment.images && comment.images.length > 0 && (
@@ -184,7 +214,7 @@ export default function Comments({ blogId }: CommentsProps) {
                                         </div>
                                     )}
 
-                                    {/* ===== Reply/Delete Actions ===== */}
+                                    {/* ===== Top Comment Actions ===== */}
                                     <div className="comment-actions">
                                         {user && (
                                             <button
@@ -192,6 +222,17 @@ export default function Comments({ blogId }: CommentsProps) {
                                                 onClick={() => setReplyTo(comment.id)}
                                             >
                                                 Reply
+                                            </button>
+                                        )}
+                                        {isOwner && (
+                                            <button
+                                                className="reply-btn"
+                                                onClick={() => {
+                                                    setEditingId(comment.id)
+                                                    setEditContent(comment.content)
+                                                }}
+                                            >
+                                                Edit
                                             </button>
                                         )}
                                         {isOwner && (
@@ -249,20 +290,22 @@ export default function Comments({ blogId }: CommentsProps) {
                                             </div>
                                         )}
 
+                                        {/* Reply Actions */}
                                         <div className="reply-actions">
                                             <button
+                                                className="reply-btn"
                                                 onClick={() => handlePostReply(comment.id)}
-                                                className="reply-send-btn"
                                             >
                                                 Send
                                             </button>
                                             <button
+                                                className="delete-btn"
                                                 onClick={() => setReplyTo(null)}
-                                                className="reply-cancel-btn"
                                             >
                                                 Cancel
                                             </button>
                                         </div>
+                                        
                                     </div>
                                 )}
 
@@ -273,9 +316,21 @@ export default function Comments({ blogId }: CommentsProps) {
                                             const isReplyOwner = user?.id === reply.author_id
                                             return (
                                                 <li key={reply.id} className="reply-item">
-                                                    <p>
-                                                        <strong>{reply.author_name}</strong>: {reply.content}
-                                                    </p>
+                                                    {editingId === reply.id ? (
+                                                        <>
+                                                            <textarea
+                                                                value={editContent}
+                                                                onChange={e => setEditContent(e.target.value)}
+                                                                className="comment-input"
+                                                            />
+                                                            <button className="reply-btn" onClick={() => handleEditSave(reply.id)}>Save</button>
+                                                            <button className="delete-btn" onClick={() => setEditingId(null)}>Cancel</button>
+                                                        </>
+                                                    ) : (
+                                                        <p>
+                                                            <strong>{reply.author_name}</strong>: {reply.content}
+                                                        </p>
+                                                    )}
 
                                                     {/* Reply images */}
                                                     {reply.images && reply.images.length > 0 && (
@@ -286,21 +341,34 @@ export default function Comments({ blogId }: CommentsProps) {
                                                                     src={src}
                                                                     alt={`Reply image ${i + 1}`}
                                                                     className="comment-img"
-                                                                    onClick={() => setActiveImage(src)} // <-- click to open modal
+                                                                    onClick={() => setActiveImage(src)}
                                                                 />
                                                             ))}
                                                         </div>
                                                     )}
 
+                                                    <div className="reply-actions">
+                                                        {isReplyOwner && (
+                                                            <button
+                                                                className="reply-btn"
+                                                                onClick={() => {
+                                                                    setEditingId(reply.id)
+                                                                    setEditContent(reply.content)
+                                                                }}
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                        )}
+                                                        {isReplyOwner && (
+                                                            <button
+                                                                className="delete-btn"
+                                                                onClick={() => handleDeleteComment(reply.id)}
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        )}
+                                                    </div>
 
-                                                    {isReplyOwner && (
-                                                        <button
-                                                            className="delete-btn"
-                                                            onClick={() => handleDeleteComment(reply.id)}
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    )}
                                                 </li>
                                             )
                                         })}

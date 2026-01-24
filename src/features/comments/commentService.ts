@@ -45,6 +45,16 @@ export const createComment = async (blogId: string,
   if (error) throw error
 }
 
+// Update a comment or reply
+export const updateComment = async (id: string, content: string) => {
+  const { error } = await supabase
+    .from('comments')
+    .update({ content })
+    .eq('id', id)
+
+  if (error) throw error
+}
+
 // Delete a comment
 export const deleteComment = async (id: string) => {
   const { error } = await supabase.from('comments').delete().eq('id', id)

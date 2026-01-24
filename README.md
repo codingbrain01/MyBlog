@@ -29,6 +29,10 @@ Blog Management:
 - List blogs
 - Pagination
 
+Additional Feature:
+- Image upload on Blog using Supabase
+- Comment functionality with image Upload
+
 Security:
 - Row Level Security (Supabase)
 - Only owners can edit/delete their blogs
@@ -61,8 +65,7 @@ Adjusted Features
 
 ## Official update v2.4
 
-Added Features
+What's new?
 - Uploaded blog images can be replaced
-
-Adjusted Features
 - User can edit blog contents and uploaded image/s
+- User can edit comments

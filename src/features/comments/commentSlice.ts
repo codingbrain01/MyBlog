@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { fetchComments, createComment, deleteComment } from './commentService'
+import { fetchComments, createComment, updateComment, deleteComment } from './commentService'
 import type { Comment } from './commentService'
 
 interface CommentState {
@@ -32,10 +32,25 @@ export const addComment = createAsyncThunk(
     async (
         { blogId, authorId, content, parentId, images }:
             { blogId: string, authorId: string, content: string, parentId?: string, images?: string[] },
-            { rejectWithValue }
-        ) => {
+        { rejectWithValue }
+    ) => {
         try {
             await createComment(blogId, authorId, content, parentId, images)
+        } catch (err: any) {
+            return rejectWithValue(err.message)
+        }
+    }
+)
+
+export const editComment = createAsyncThunk(
+    'comments/edit',
+    async (
+        { id, content }: { id: string; content: string },
+        { rejectWithValue }
+    ) => {
+        try {
+            await updateComment(id, content)
+            return { id, content }
         } catch (err: any) {
             return rejectWithValue(err.message)
         }
@@ -77,7 +92,12 @@ const commentSlice = createSlice({
                 state.loading = false
                 state.error = action.payload as string
             })
-
+            .addCase(editComment.fulfilled, (state, action) => {
+                const comment = state.items.find(c => c.id === action.payload.id)
+                if (comment) {
+                    comment.content = action.payload.content
+                }
+            })
             .addCase(removeComment.fulfilled, (state, action) => {
                 if (action.payload) {
                     state.items = state.items.filter(c => c.id !== action.payload)
