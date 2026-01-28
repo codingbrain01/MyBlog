@@ -69,3 +69,13 @@ What's new?
 - Uploaded blog images can be replaced
 - User can edit blog contents and uploaded image/s
 - User can edit comments
+
+## Official update v2.4.1
+
+What's new?
+- Improved design and responsiveness to most devices
+- Exagerated documentation
+
+Adjusted Features
+- Editing images with added preview
+- Image editing preview can be removed to user's content
