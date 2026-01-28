@@ -74,7 +74,7 @@ What's new?
 
 What's new?
 - Improved design and responsiveness to most devices
-- Exagerated documentation
+- Exaggerated documentation
 
 Adjusted Features
 - Editing images with added preview

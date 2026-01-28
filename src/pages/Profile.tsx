@@ -99,12 +99,12 @@ export default function Profile() {
 
         {/* Render blog list items */}
         {blogs.map(blog => (
-          <Link to={`/blog/${blog.id}`} key={blog.id}>
-            <li className="blog-item">
+          <li className="blog-item">
+            <Link to={`/blog/${blog.id}`} key={blog.id}>
               <h4>{blog.title}</h4>
               <p className="content">{blog.content.slice(0, 100)}</p>
-            </li>
-          </Link>
+            </Link>
+          </li>
         ))}
       </ul>
 
