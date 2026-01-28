@@ -45,12 +45,12 @@ export const addComment = createAsyncThunk(
 export const editComment = createAsyncThunk(
     'comments/edit',
     async (
-        { id, content }: { id: string; content: string },
+        { id, content, images }: { id: string; content: string; images?: string[] },
         { rejectWithValue }
     ) => {
         try {
-            await updateComment(id, content)
-            return { id, content }
+            await updateComment(id, content, images)
+            return { id, content, images }
         } catch (err: any) {
             return rejectWithValue(err.message)
         }
@@ -92,12 +92,20 @@ const commentSlice = createSlice({
                 state.loading = false
                 state.error = action.payload as string
             })
-            .addCase(editComment.fulfilled, (state, action) => {
-                const comment = state.items.find(c => c.id === action.payload.id)
-                if (comment) {
-                    comment.content = action.payload.content
-                }
+            
+            // CHANGED: Set loading state during edit
+            .addCase(editComment.pending, state => { 
+                state.loading = true 
             })
+            .addCase(editComment.fulfilled, state => {
+                // Don't update local state here - we'll reload from DB instead
+                state.loading = false
+            })
+            .addCase(editComment.rejected, (state, action) => {
+                state.loading = false
+                state.error = action.payload as string
+            })
+            
             .addCase(removeComment.fulfilled, (state, action) => {
                 if (action.payload) {
                     state.items = state.items.filter(c => c.id !== action.payload)

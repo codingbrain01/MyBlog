@@ -14,24 +14,39 @@ import Loader from './components/loader'
 import type { JSX } from 'react'
 import { hydrateUser } from './features/auth/authSlice'
 
+// PrivateRoute component to protect routes
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
+
+  // Select auth state from Redux store
   const { user, hydrated } = useSelector((state: RootState) => state.auth)
 
+  // Show loader while session is hydrating
   if (!hydrated) return <Loader />
 
+  // Render children if user is logged in, else redirect to register
   return user ? children : <Navigate to="/register" replace />
 }
 
+// Main App component
 export default function App() {
+
+  // Redux hooks
   const dispatch = useDispatch<AppDispatch>()
+
+  // Select auth state from Redux store
   const { hydrated } = useSelector((state: RootState) => state.auth)
 
+  // Hydrate user session on app mount
   useEffect(() => {
+
+    // Dispatch hydrateUser action
     dispatch(hydrateUser())
   }, [dispatch])
 
+  // Show loader while session is hydrating
   if (!hydrated) return <Loader />
 
+  // Render application routes
   return (
     <BrowserRouter>
       <Routes>

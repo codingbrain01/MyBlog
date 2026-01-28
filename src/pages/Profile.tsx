@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient'
 import type { RootState } from '../app/store'
 import { Link } from 'react-router-dom'
 
+// Profile page component
 interface Blog {
   id: string
   title: string
@@ -11,22 +12,43 @@ interface Blog {
   created_at: string
 }
 
+// Pagination settings
 const PAGE_SIZE = 10
 
+// Profile page component
 export default function Profile() {
+
+  // Select user from auth state
   const { user } = useSelector((s: RootState) => s.auth)
+
+  // Local state for user's blogs and pagination
   const [blogs, setBlogs] = useState<Blog[]>([])
+
+  // Pagination state
   const [page, setPage] = useState(1)
+
+  // Total blogs count
   const [total, setTotal] = useState(0)
+
+  // Loading state
   const [loading, setLoading] = useState(false)
 
+  // Fetch user's blogs from Supabase
   if (!user) return null
 
+  // Function to fetch blogs
   const fetchBlogs = async () => {
+
+    // Set loading state
     setLoading(true)
+
+    // Calculate range for pagination
     const from = (page - 1) * PAGE_SIZE
+
+    // Calculate to index for pagination
     const to = from + PAGE_SIZE - 1
 
+    // Query Supabase for user's blogs with pagination
     const { data, count, error } = await supabase
       .from('blogs')
       .select('*', { count: 'exact' })
@@ -34,25 +56,33 @@ export default function Profile() {
       .order('created_at', { ascending: false })
       .range(from, to)
 
+    // Handle error
     if (error) console.error(error)
+
+    // Update state with fetched blogs
     else {
       setBlogs(data as Blog[])
       setTotal(count || 0)
     }
+
+    // Clear loading state
     setLoading(false)
   }
 
+  // Fetch blogs when page changes
   useEffect(() => {
     fetchBlogs()
   }, [page])
 
+  // Calculate total pages for pagination
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
+  // Render profile page
   return (
     <div className="container profile-page">
       <div className="header">
         <h2>My Profile</h2>
-        <Link to="/logout"><button>Logout</button></Link>
+        <Link className="a" to="/logout"><button className="logout-btn">Logout</button></Link>
       </div>
       <div className="profile-info">
         <p><strong>Name:</strong> {user.name}</p>
@@ -66,14 +96,19 @@ export default function Profile() {
       {!loading && blogs.length === 0 && <p>You haven't posted any blogs yet.</p>}
 
       <ul className="blog-list">
+
+        {/* Render blog list items */}
         {blogs.map(blog => (
-          <li key={blog.id} className="blog-item">
-            <Link to={`/blog/${blog.id}`}>{blog.title}</Link>
-            <p>{blog.content.slice(0, 100)}</p>
-          </li>
+          <Link to={`/blog/${blog.id}`} key={blog.id}>
+            <li className="blog-item">
+              <h4>{blog.title}</h4>
+              <p className="content">{blog.content.slice(0, 100)}</p>
+            </li>
+          </Link>
         ))}
       </ul>
 
+      {/* Pagination controls */}
       {totalPages > 1 && (
         <div className="pagination">
           <button

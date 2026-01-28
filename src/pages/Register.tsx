@@ -4,21 +4,34 @@ import { register } from '../features/auth/authSlice'
 import type { AppDispatch, RootState } from '../app/store'
 import { Navigate, Link } from 'react-router-dom'
 
+// Register page component
 export default function Register() {
+
+  // Redux hooks
   const dispatch = useDispatch<AppDispatch>()
+
+  // Select auth state from Redux store
   const { user, loading, error } = useSelector((s: RootState) => s.auth)
 
+  // Local state for form inputs
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
 
+  // Redirect to home if already logged in
   if (user) return <Navigate to="/" replace />
 
+  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
+
+    // Prevent default form submission behavior
     e.preventDefault()
+
+    // Dispatch register action
     dispatch(register({ email, password, name }))
   }
 
+  // Render Register page
   return (
     <div className='auth-box'>
       <h2>Register</h2>

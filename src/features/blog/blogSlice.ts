@@ -7,6 +7,7 @@ import {
     deleteBlog,
 } from './blogService'
 
+// Define Blog interface
 export interface Blog {
     id: string
     title: string
@@ -17,6 +18,7 @@ export interface Blog {
     images?: string[]
 }
 
+// Define BlogState interface
 interface BlogState {
     items: Blog[]
     selectedBlog: Blog | null
@@ -27,6 +29,7 @@ interface BlogState {
     error: string | null
 }
 
+// Initial state
 const initialState: BlogState = {
     items: [],
     selectedBlog: null,
@@ -37,14 +40,20 @@ const initialState: BlogState = {
     error: null,
 }
 
+// Thunks for loading, adding, editing, and removing blogs
 export const loadBlogs = createAsyncThunk(
     'blog/load',
+
+    // Fetch blogs with pagination
     async ({ page, pageSize }: { page: number; pageSize: number }) =>
         fetchBlogs(page, pageSize)
 )
 
+// Load a single blog by ID
 export const loadBlogById = createAsyncThunk(
     'blog/loadById',
+
+    // Fetch blog by ID
     async (id: string, { rejectWithValue }) => {
         try {
             return await fetchBlogById(id)
@@ -53,8 +62,12 @@ export const loadBlogById = createAsyncThunk(
         }
     }
 )
+
+// Add a new blog
 export const addBlog = createAsyncThunk(
     'blog/add',
+
+    // Create a new blog
     async (
         { title, content, userId, images }: { title: string; content: string; userId: string, images?: string[] }
     ) => {
@@ -62,22 +75,29 @@ export const addBlog = createAsyncThunk(
     }
 )
 
+// Edit an existing blog
 export const editBlog = createAsyncThunk(
     'blog/edit',
-    async ({ id, title, content, images }: { id: string; title: string; content: string; images?: string[] }
 
+    // Update a blog
+    async ({ id, title, content, images }: { id: string; title: string; content: string; images?: string[] }
     ) => {
         await updateBlog(id, title, content, images)
     }
 )
 
+// Remove a blog
 export const removeBlog = createAsyncThunk(
     'blog/remove',
-    async (id: string) => {
-        await deleteBlog(id)
+
+    // Delete blog by ID
+    async ({ id, images }: { id: string; images?: string[] }) => {
+        await deleteBlog(id, images)
+        return id
     }
 )
 
+// Create blog slice
 const blogSlice = createSlice({
     name: 'blog',
     initialState,
@@ -88,6 +108,8 @@ const blogSlice = createSlice({
     },
     extraReducers: builder => {
         builder
+
+            // Load blogs
             .addCase(loadBlogs.pending, s => { s.loading = true })
             .addCase(loadBlogs.fulfilled, (s, a) => {
                 s.loading = false
@@ -98,6 +120,8 @@ const blogSlice = createSlice({
                 s.loading = false
                 s.error = a.error.message || 'Failed to load blogs'
             })
+
+            // Load blog by ID
             .addCase(loadBlogById.pending, s => { s.loading = true })
             .addCase(loadBlogById.fulfilled, (s, a) => {
                 s.selectedBlog = a.payload
@@ -107,20 +131,38 @@ const blogSlice = createSlice({
                 s.error = a.payload as string
                 s.loading = false
             })
-            .addCase(removeBlog.fulfilled, (s, action) => {
-                const idToRemove = action.meta.arg
-                s.items = s.items.filter(b => b.id !== idToRemove)
-                if (s.selectedBlog?.id === idToRemove) {
-                    s.selectedBlog = null
-                }
+
+
+            // Add blog
+            .addCase(addBlog.pending, s => {
+                s.loading = true
+            })
+            .addCase(addBlog.fulfilled, s => {
+                s.error = null
             })
             .addCase(addBlog.rejected, (s, a) => {
                 s.error = a.error.message || 'Failed to create blog'
+            })
+
+            // Edit blog
+            .addCase(editBlog.pending, s => {
+                s.loading = true
+            })
+            .addCase(editBlog.fulfilled, s => {
+                s.error = null
             })
             .addCase(editBlog.rejected, (s, a) => {
                 s.error = a.error.message || 'Failed to update blog'
             })
 
+            // Remove blog
+            .addCase(removeBlog.pending, s => {
+                s.loading = true
+            })
+            .addCase(removeBlog.fulfilled, (s, a) => {
+                s.items = s.items.filter(blog => blog.id !== a.payload)
+                s.error = null
+            })
             .addCase(removeBlog.rejected, (s, a) => {
                 s.error = a.error.message || 'Failed to delete blog'
             })
@@ -129,5 +171,6 @@ const blogSlice = createSlice({
     },
 })
 
+// Export actions and reducer
 export const { setPage } = blogSlice.actions
 export default blogSlice.reducer

@@ -45,14 +45,25 @@ export const createComment = async (blogId: string,
   if (error) throw error
 }
 
-// Update a comment or reply
-export const updateComment = async (id: string, content: string) => {
-  const { error } = await supabase
+// Update a comment or reply (now supports images)
+export const updateComment = async (id: string, content: string, images?: string[]) => {
+  const updateData: any = { content }
+  
+  if (images !== undefined) {
+    updateData.images = images && images.length > 0 ? images : null
+  }
+  
+  const { data, error } = await supabase
     .from('comments')
-    .update({ content })
+    .update(updateData)
     .eq('id', id)
+    .select()
 
   if (error) throw error
+  
+  if (!data || data.length === 0) {
+    throw new Error('Update did not affect any rows')
+  }
 }
 
 // Delete a comment

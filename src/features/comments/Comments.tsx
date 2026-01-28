@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import type { AppDispatch, RootState } from '../../app/store'
-import { uploadBlogImages } from '../blog/blogService'
+import { uploadBlogImages, deleteBlogImages } from '../blog/blogService'
 import { loadComments, addComment, editComment, removeComment } from './commentSlice'
 
 
@@ -34,9 +34,21 @@ export default function Comments({ blogId }: CommentsProps) {
     const [replyImages, setReplyImages] = useState<File[]>([])
     const [replyPreviews, setReplyPreviews] = useState<string[]>([])
 
-    // Edit state
-    const [editingId, setEditingId] = useState<string | null>(null)
-    const [editContent, setEditContent] = useState('')
+    // Edit state for TOP-LEVEL COMMENTS
+    const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+    const [editCommentContent, setEditCommentContent] = useState('')
+    const [editCommentImages, setEditCommentImages] = useState<File[]>([])
+    const [editCommentPreviews, setEditCommentPreviews] = useState<string[]>([])
+    const [existingEditCommentImages, setExistingEditCommentImages] = useState<string[]>([])
+    const [removedCommentImages, setRemovedCommentImages] = useState<string[]>([])
+
+    // Edit state for REPLIES
+    const [editingReplyId, setEditingReplyId] = useState<string | null>(null)
+    const [editReplyContent, setEditReplyContent] = useState('')
+    const [editReplyImages, setEditReplyImages] = useState<File[]>([])
+    const [editReplyPreviews, setEditReplyPreviews] = useState<string[]>([])
+    const [existingEditReplyImages, setExistingEditReplyImages] = useState<string[]>([])
+    const [removedReplyImages, setRemovedReplyImages] = useState<string[]>([])
 
     // Generate previews for main comment
     useEffect(() => {
@@ -51,6 +63,20 @@ export default function Comments({ blogId }: CommentsProps) {
         setReplyPreviews(urls)
         return () => urls.forEach(url => URL.revokeObjectURL(url))
     }, [replyImages])
+
+    // Generate previews for editing COMMENTS
+    useEffect(() => {
+        const urls = editCommentImages.map(file => URL.createObjectURL(file))
+        setEditCommentPreviews(urls)
+        return () => urls.forEach(url => URL.revokeObjectURL(url))
+    }, [editCommentImages])
+
+    // Generate previews for editing REPLIES
+    useEffect(() => {
+        const urls = editReplyImages.map(file => URL.createObjectURL(file))
+        setEditReplyPreviews(urls)
+        return () => urls.forEach(url => URL.revokeObjectURL(url))
+    }, [editReplyImages])
 
     // Load comments
     useEffect(() => {
@@ -103,20 +129,176 @@ export default function Comments({ blogId }: CommentsProps) {
         dispatch(loadComments(blogId))
     }
 
-    // Edit
-    const handleEditSave = async (id: string) => {
-        if (!editContent.trim()) return
-
-        await dispatch(editComment({ id, content: editContent }))
-        setEditingId(null)
-        setEditContent('')
+    // START editing a top-level COMMENT
+    const handleStartEditComment = (comment: any) => {
+        setEditingCommentId(comment.id)
+        setEditCommentContent(comment.content)
+        setExistingEditCommentImages(comment.images || [])
+        setEditCommentImages([])
+        setEditCommentPreviews([])
+        setRemovedCommentImages([])
     }
 
-    // Delete
+    // SAVE edited top-level COMMENT
+    const handleSaveEditComment = async (id: string) => {
+        if (!editCommentContent.trim()) return
+
+        try {
+
+            // Delete removed images from storage
+            if (removedCommentImages.length > 0) {
+                await deleteBlogImages(removedCommentImages)
+            }
+
+            let imageUrls: string[]
+
+            if (editCommentImages.length > 0) {
+                const newImageUrls = await uploadBlogImages(editCommentImages, user!.id)
+                imageUrls = [...existingEditCommentImages, ...newImageUrls]
+            } else {
+                // FIXED: Always use an array (empty or with existing images)
+                imageUrls = existingEditCommentImages
+            }
+
+            // Update the database - ALWAYS pass images array (even if empty)
+            await dispatch(editComment({ id, content: editCommentContent, images: imageUrls })).unwrap()
+
+            // Clear all edit states
+            setEditingCommentId(null)
+            setEditCommentContent('')
+            setEditCommentImages([])
+            setEditCommentPreviews([])
+            setExistingEditCommentImages([])
+            setRemovedCommentImages([])
+
+            // Reload comments from database
+            await dispatch(loadComments(blogId)).unwrap()
+        } catch (error) {
+            alert('Failed to save comment. Please try again.')
+        }
+    }
+
+    // CANCEL editing top-level COMMENT
+    const handleCancelEditComment = () => {
+        setEditingCommentId(null)
+        setEditCommentContent('')
+        setEditCommentImages([])
+        setEditCommentPreviews([])
+        setExistingEditCommentImages([])
+        setRemovedCommentImages([])
+    }
+
+    // Remove existing image from COMMENT (and track for deletion)
+    const handleRemoveExistingCommentImage = (index: number) => {
+        const imageToRemove = existingEditCommentImages[index]
+
+        // Add to removed list for deletion on save
+        setRemovedCommentImages(prev => [...prev, imageToRemove])
+
+        // Remove from existing images (this updates the preview immediately)
+        setExistingEditCommentImages(prev => {
+            const newArray = prev.filter((_, i) => i !== index)
+
+            return newArray
+        })
+    }
+
+    // START editing a REPLY
+    const handleStartEditReply = (reply: any) => {
+        setEditingReplyId(reply.id)
+        setEditReplyContent(reply.content)
+        setExistingEditReplyImages(reply.images || [])
+        setEditReplyImages([])
+        setEditReplyPreviews([])
+        setRemovedReplyImages([])
+    }
+
+    // SAVE edited REPLY
+    const handleSaveEditReply = async (id: string) => {
+        if (!editReplyContent.trim()) return
+
+        try {
+
+            // Delete removed images from storage
+            if (removedReplyImages.length > 0) {
+                await deleteBlogImages(removedReplyImages)
+            }
+
+            let imageUrls: string[]
+
+            if (editReplyImages.length > 0) {
+                const newImageUrls = await uploadBlogImages(editReplyImages, user!.id)
+                imageUrls = [...existingEditReplyImages, ...newImageUrls]
+            } else {
+                // FIXED: Always use an array (empty or with existing images)
+                imageUrls = existingEditReplyImages
+            }
+
+            // Update the database - ALWAYS pass images array (even if empty)
+            await dispatch(editComment({ id, content: editReplyContent, images: imageUrls })).unwrap()
+
+            // Clear all edit states
+            setEditingReplyId(null)
+            setEditReplyContent('')
+            setEditReplyImages([])
+            setEditReplyPreviews([])
+            setExistingEditReplyImages([])
+            setRemovedReplyImages([])
+
+            // Reload comments from database
+            await dispatch(loadComments(blogId)).unwrap()
+
+        } catch (error) {
+            console.error('Error saving reply:', error)
+            alert('Failed to save reply. Please try again.')
+        }
+    }
+
+    // CANCEL editing REPLY
+    const handleCancelEditReply = () => {
+        setEditingReplyId(null)
+        setEditReplyContent('')
+        setEditReplyImages([])
+        setEditReplyPreviews([])
+        setExistingEditReplyImages([])
+        setRemovedReplyImages([])
+    }
+
+    // Remove existing image from REPLY (and track for deletion)
+    const handleRemoveExistingReplyImage = (index: number) => {
+        const imageToRemove = existingEditReplyImages[index]
+
+        // Add to removed list for deletion on save
+        setRemovedReplyImages(prev => [...prev, imageToRemove])
+
+        // Remove from existing images (this updates the preview immediately)
+        setExistingEditReplyImages(prev => {
+            const newArray = prev.filter((_, i) => i !== index)
+
+            return newArray
+        })
+    }
+
+    // Delete comment and its images
     const handleDeleteComment = async (id: string) => {
         if (!confirm('Delete this comment?')) return
-        await dispatch(removeComment(id)).unwrap()
-        dispatch(loadComments(blogId))
+
+        try {
+            // Find the comment to get its images
+            const commentToDelete = comments.find(c => c.id === id)
+
+            // Delete associated images from storage
+            if (commentToDelete?.images && commentToDelete.images.length > 0) {
+                await deleteBlogImages(commentToDelete.images)
+            }
+
+            // Delete the comment from database
+            await dispatch(removeComment(id)).unwrap()
+            dispatch(loadComments(blogId))
+        } catch (error) {
+            console.error('Error deleting comment:', error)
+            alert('Failed to delete comment. Please try again.')
+        }
     }
 
     // Top-level comments
@@ -179,28 +361,86 @@ export default function Comments({ blogId }: CommentsProps) {
                         return (
                             <li key={comment.id} className="comment-item">
                                 <div className="comment-content">
-                                    {/* Top-level */}
-                                    {editingId === comment.id ? (
-                                        <>
+                                    {/* Top-level COMMENT */}
+                                    {editingCommentId === comment.id ? (
+                                        <div className="edit-box">
                                             <textarea
-                                                value={editContent}
-                                                onChange={e => setEditContent(e.target.value)}
+                                                value={editCommentContent}
+                                                onChange={e => setEditCommentContent(e.target.value)}
                                                 className="comment-input"
                                             />
-                                            <div className="comment-actions">
-                                            <button className="reply-btn" onClick={() => handleEditSave(comment.id)}>Save</button>
-                                            <button className="delete-btn" onClick={() => setEditingId(null)}>Cancel</button>
+
+                                            {/* Display existing images with remove option */}
+                                            {existingEditCommentImages.length > 0 && (
+                                                <div className="existing-images">
+                                                    <p className="image-label">Current images:</p>
+                                                    <div className="image-previews">
+                                                        {existingEditCommentImages.map((src, i) => (
+                                                            <div key={i} className="preview-wrapper">
+                                                                <img
+                                                                    src={src}
+                                                                    alt={`Existing ${i}`}
+                                                                    className="comment-preview-img"
+                                                                />
+                                                                <button
+                                                                    className="btn-remove-image"
+                                                                    onClick={() => handleRemoveExistingCommentImage(i)}
+                                                                    type="button"
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Upload new images */}
+                                            <div className="upload-section">
+                                                <label className="upload-label">Add new images:</label>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    multiple
+                                                    onChange={e => {
+                                                        if (!e.target.files) return
+                                                        setEditCommentImages(Array.from(e.target.files))
+                                                    }}
+                                                />
                                             </div>
-                                        </>
+
+                                            {/* Preview new images */}
+                                            {editCommentPreviews.length > 0 && (
+                                                <div className="image-previews">
+                                                    <p className="image-label">New images to add:</p>
+                                                    {editCommentPreviews.map((src, i) => (
+                                                        <img
+                                                            key={i}
+                                                            src={src}
+                                                            alt={`New preview ${i}`}
+                                                            className="comment-preview-img"
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <div className="comment-actions">
+                                                <button className="reply-btn" onClick={() => handleSaveEditComment(comment.id)}>
+                                                    Save
+                                                </button>
+                                                <button className="delete-btn" onClick={handleCancelEditComment}>
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
                                     ) : (
                                         <p>
                                             <strong>{comment.author_name}</strong>: {comment.content}
                                         </p>
                                     )}
 
-
-                                    {/* ===== Comment Images ===== */}
-                                    {comment.images && comment.images.length > 0 && (
+                                    {/* ===== Comment Images (only show when NOT editing) ===== */}
+                                    {editingCommentId !== comment.id && comment.images && comment.images.length > 0 && (
                                         <div className="comment-images">
                                             {comment.images.map((src, i) => (
                                                 <img
@@ -208,42 +448,41 @@ export default function Comments({ blogId }: CommentsProps) {
                                                     src={src}
                                                     alt={`Comment image ${i + 1}`}
                                                     className="comment-img"
-                                                    onClick={() => setActiveImage(src)} // open modal on click
+                                                    onClick={() => setActiveImage(src)}
                                                 />
                                             ))}
                                         </div>
                                     )}
 
                                     {/* ===== Top Comment Actions ===== */}
-                                    <div className="comment-actions">
-                                        {user && (
-                                            <button
-                                                className="reply-btn"
-                                                onClick={() => setReplyTo(comment.id)}
-                                            >
-                                                Reply
-                                            </button>
-                                        )}
-                                        {isOwner && (
-                                            <button
-                                                className="reply-btn"
-                                                onClick={() => {
-                                                    setEditingId(comment.id)
-                                                    setEditContent(comment.content)
-                                                }}
-                                            >
-                                                Edit
-                                            </button>
-                                        )}
-                                        {isOwner && (
-                                            <button
-                                                className="delete-btn"
-                                                onClick={() => handleDeleteComment(comment.id)}
-                                            >
-                                                Delete
-                                            </button>
-                                        )}
-                                    </div>
+                                    {editingCommentId !== comment.id && (
+                                        <div className="comment-actions">
+                                            {user && (
+                                                <button
+                                                    className="reply-btn"
+                                                    onClick={() => setReplyTo(comment.id)}
+                                                >
+                                                    Reply
+                                                </button>
+                                            )}
+                                            {isOwner && (
+                                                <button
+                                                    className="reply-btn"
+                                                    onClick={() => handleStartEditComment(comment)}
+                                                >
+                                                    Edit
+                                                </button>
+                                            )}
+                                            {isOwner && (
+                                                <button
+                                                    className="delete-btn"
+                                                    onClick={() => handleDeleteComment(comment.id)}
+                                                >
+                                                    Delete
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* ===== Image Modal ===== */}
@@ -305,7 +544,7 @@ export default function Comments({ blogId }: CommentsProps) {
                                                 Cancel
                                             </button>
                                         </div>
-                                        
+
                                     </div>
                                 )}
 
@@ -316,24 +555,86 @@ export default function Comments({ blogId }: CommentsProps) {
                                             const isReplyOwner = user?.id === reply.author_id
                                             return (
                                                 <li key={reply.id} className="reply-item">
-                                                    {editingId === reply.id ? (
-                                                        <>
+                                                    {/* REPLY EDIT MODE */}
+                                                    {editingReplyId === reply.id ? (
+                                                        <div className="edit-box">
                                                             <textarea
-                                                                value={editContent}
-                                                                onChange={e => setEditContent(e.target.value)}
+                                                                value={editReplyContent}
+                                                                onChange={e => setEditReplyContent(e.target.value)}
                                                                 className="comment-input"
                                                             />
-                                                            <button className="reply-btn" onClick={() => handleEditSave(reply.id)}>Save</button>
-                                                            <button className="delete-btn" onClick={() => setEditingId(null)}>Cancel</button>
-                                                        </>
+
+                                                            {/* Display existing images with remove option */}
+                                                            {existingEditReplyImages.length > 0 && (
+                                                                <div className="existing-images">
+                                                                    <p className="image-label">Current images:</p>
+                                                                    <div className="image-previews">
+                                                                        {existingEditReplyImages.map((src, i) => (
+                                                                            <div key={i} className="preview-wrapper">
+                                                                                <img
+                                                                                    src={src}
+                                                                                    alt={`Existing ${i}`}
+                                                                                    className="comment-preview-img"
+                                                                                />
+                                                                                <button
+                                                                                    className="btn-remove-image"
+                                                                                    type="button"
+                                                                                    onClick={() => handleRemoveExistingReplyImage(i)}
+                                                                                >
+                                                                                    ×
+                                                                                </button>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Upload new images */}
+                                                            <div className="upload-section">
+                                                                <label className="upload-label">Add new images:</label>
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    multiple
+                                                                    onChange={e => {
+                                                                        if (!e.target.files) return
+                                                                        setEditReplyImages(Array.from(e.target.files))
+                                                                    }}
+                                                                />
+                                                            </div>
+
+                                                            {/* Preview new images */}
+                                                            {editReplyPreviews.length > 0 && (
+                                                                <div className="image-previews">
+                                                                    <p className="image-label">New images to add:</p>
+                                                                    {editReplyPreviews.map((src, i) => (
+                                                                        <img
+                                                                            key={i}
+                                                                            src={src}
+                                                                            alt={`New preview ${i}`}
+                                                                            className="comment-preview-img"
+                                                                        />
+                                                                    ))}
+                                                                </div>
+                                                            )}
+
+                                                            <div className="comment-actions">
+                                                                <button className="reply-btn" onClick={() => handleSaveEditReply(reply.id)}>
+                                                                    Save
+                                                                </button>
+                                                                <button className="delete-btn" onClick={handleCancelEditReply}>
+                                                                    Cancel
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     ) : (
                                                         <p>
                                                             <strong>{reply.author_name}</strong>: {reply.content}
                                                         </p>
                                                     )}
 
-                                                    {/* Reply images */}
-                                                    {reply.images && reply.images.length > 0 && (
+                                                    {/* Reply images (only show when NOT editing) */}
+                                                    {editingReplyId !== reply.id && reply.images && reply.images.length > 0 && (
                                                         <div className="comment-images">
                                                             {reply.images.map((src, i) => (
                                                                 <img
@@ -347,27 +648,27 @@ export default function Comments({ blogId }: CommentsProps) {
                                                         </div>
                                                     )}
 
-                                                    <div className="reply-actions">
-                                                        {isReplyOwner && (
-                                                            <button
-                                                                className="reply-btn"
-                                                                onClick={() => {
-                                                                    setEditingId(reply.id)
-                                                                    setEditContent(reply.content)
-                                                                }}
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                        )}
-                                                        {isReplyOwner && (
-                                                            <button
-                                                                className="delete-btn"
-                                                                onClick={() => handleDeleteComment(reply.id)}
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        )}
-                                                    </div>
+                                                    {/* Reply actions (only show when NOT editing) */}
+                                                    {editingReplyId !== reply.id && (
+                                                        <div className="reply-actions">
+                                                            {isReplyOwner && (
+                                                                <button
+                                                                    className="reply-btn"
+                                                                    onClick={() => handleStartEditReply(reply)}
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                            )}
+                                                            {isReplyOwner && (
+                                                                <button
+                                                                    className="delete-btn"
+                                                                    onClick={() => handleDeleteComment(reply.id)}
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
 
                                                 </li>
                                             )

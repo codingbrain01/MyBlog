@@ -4,20 +4,35 @@ import { login } from '../features/auth/authSlice'
 import type { AppDispatch, RootState } from '../app/store'
 import { Navigate, Link } from 'react-router-dom'
 
+// Login page component
 export default function Login() {
+
+  // Redux hooks
   const dispatch = useDispatch<AppDispatch>()
+
+  // Select auth state from Redux store
   const { user, loading, error } = useSelector((s: RootState) => s.auth)
 
+  // Local state for form inputs
   const [email, setEmail] = useState('')
+
+  // Local state for form inputs
   const [password, setPassword] = useState('')
 
+  // Redirect to home if already logged in
   if (user) return <Navigate to="/" replace />
 
+  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
+
+    // Prevent default form submission behavior
     e.preventDefault()
+
+    // Dispatch login action
     dispatch(login({ email, password }))
   }
 
+  // Render Login page
   return (
     <div className='auth-box'>
       <h2>Login</h2>
@@ -44,6 +59,7 @@ export default function Login() {
         </button>
       </form>
 
+      {/* Error message */}
       {error && <p className='error'>{error}</p>}
 
       <p>
